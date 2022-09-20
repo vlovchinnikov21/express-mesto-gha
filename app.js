@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
+const { ERR_NOT_FOUND } = require('./error-codes/errors');
 
 const { PORT = 3000 } = process.env;
 
@@ -21,6 +22,9 @@ app.use((req, res, next) => {
 
 app.use(userRouter);
 app.use(cardRouter);
+app.use('*', (req, res) => {
+  res.status(ERR_NOT_FOUND).send({ message: 'Данный ресурс не найден' });
+});
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
