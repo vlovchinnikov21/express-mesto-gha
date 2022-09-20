@@ -12,7 +12,7 @@ module.exports.getUsersById = (req, res) => {
     .orFail(() => res.status(ERR_NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' }))
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
       } else {
         res.status(ERR_DEFAULT).send({ message: 'Ошибка!' });
@@ -27,7 +27,9 @@ module.exports.createUser = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные пользователя' });
+        res.status(ERR_BAD_REQUEST).send({ message: 'Ошибка валидации' });
+      } else if (err.name === 'CastError') {
+        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
       } else {
         res.status(ERR_DEFAULT).send({ message: 'Ошибка!' });
       }
@@ -41,7 +43,7 @@ module.exports.updateUserProfile = (req, res) => {
     .orFail(() => res.status(ERR_NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' }))
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении информации' });
       } else {
         res.status(ERR_DEFAULT).send({ message: 'Ошибка!' });
