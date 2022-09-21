@@ -41,12 +41,12 @@ module.exports.updateUserProfile = (req, res) => {
 
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .orFail(() => res.status(ERR_NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' }))
-    .then((user) => res.send({ data: user }))
+    .then((userData) => res.send({ data: userData }))
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении информации' });
-      } else {
         res.status(ERR_DEFAULT).send({ message: 'Ошибка!' });
+      } else {
+        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении информации' });
       }
     });
 };
@@ -56,7 +56,7 @@ module.exports.updateUserAvatar = (req, res) => {
 
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .orFail(() => res.status(ERR_NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' }))
-    .then((user) => res.send({ data: user }))
+    .then((avatarData) => res.send({ data: avatarData }))
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
