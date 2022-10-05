@@ -8,7 +8,7 @@ module.exports.auth = (req, res, next) => {
   let payload;
 
   try {
-    payload = jwt.verify(token, 'secret-key');
+    payload = jwt.verify(token, 'super-strong-secret');
   } catch (err) {
     res.status(ERR_AUTH).send({ message: 'Ошибка авторизации' });
   }
