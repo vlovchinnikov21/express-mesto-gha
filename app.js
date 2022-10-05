@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
+const auth = require('./middlewars/auth');
 const { login, createUser } = require('./controllers/users');
 const { ERR_NOT_FOUND } = require('./error-codes/errors');
 
@@ -24,8 +25,8 @@ app.use((req, res, next) => {
 app.post('/signin', login);
 app.post('/signup', createUser);
 
-app.use(userRouter);
-app.use(cardRouter);
+app.use('/', auth, userRouter);
+app.use('/', auth, cardRouter);
 app.use('*', (req, res) => {
   res.status(ERR_NOT_FOUND).send({ message: 'Данный ресурс не найден' });
 });
