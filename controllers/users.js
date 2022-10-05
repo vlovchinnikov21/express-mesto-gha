@@ -92,9 +92,15 @@ module.exports.login = (req, res) => {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
       })
-        .send({ message: 'cookie' });
+        .send({ message: 'Авторизация прошла успешно!' });
     })
     .catch(() => {
       res.status(ERR_AUTH).send({ message: 'Ошибка авторизации' });
     });
+};
+
+module.exports.getCurrentUser = (req, res) => {
+  User.findById(req.user._id)
+    .then((currentUser) => res.send({ currentUser }))
+    .catch((err) => res.send(err));
 };
