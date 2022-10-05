@@ -7,9 +7,9 @@ const {
 } = require('../controllers/cards');
 
 router.get('/cards', getCards);
-router.delete('/cards/:cardId', idValidation, deleteCard);
+router.delete('/cards/:_id', idValidation, deleteCard);
 router.post('/cards', cardValidation, createCard);
-router.put('/cards/:cardId/likes', idValidation, likeCard);
-router.delete('/cards/:cardId/likes', idValidation, dislikeCard);
+router.put('/cards/:_id/likes', idValidation, likeCard);
+router.delete('/cards/:_id/likes', idValidation, dislikeCard);
 
 module.exports = router;
