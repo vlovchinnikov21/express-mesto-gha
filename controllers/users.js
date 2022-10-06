@@ -1,30 +1,28 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const {
-  ERR_DEFAULT, ERR_BAD_REQUEST, ERR_NOT_FOUND, ERR_AUTH,
-} = require('../error-codes/errors');
+const BadRequest = require('../error-codes/BadRequest');
+const NotFound = require('../error-codes/NotFound');
+const Conflict = require('../error-codes/Conflict');
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(ERR_DEFAULT).send({ message: 'Ошибка!' }));
+    .catch(next);
 };
 
-module.exports.getUsersById = (req, res) => {
+module.exports.getUsersById = (req, res, next) => {
   User.findById(req.params._id)
-    .orFail(() => res.status(ERR_NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' }))
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-      } else {
-        res.status(ERR_DEFAULT).send({ message: 'Ошибка!' });
+    .then((user) => {
+      if (!user) {
+        throw new NotFound('Пользователь с таким id не найден');
       }
-    });
+      res.send({ data: user });
+    })
+    .catch(next);
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -35,49 +33,40 @@ module.exports.createUser = (req, res) => {
     }))
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
-      } else {
-        res.status(ERR_DEFAULT).send({ message: 'Ошибка!' });
+      if (err.name === 'MongoError' && err.code === 11000) {
+        throw new Conflict('Пользователь с таким email уже существует');
       }
-    });
+    })
+    .catch(next);
 };
 
-module.exports.updateUserProfile = (req, res) => {
+module.exports.updateUserProfile = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
-    .orFail(() => res.status(ERR_NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' }))
     .then((userData) => res.send({ data: userData }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Ошибка валидации' });
-      } else if (err.name === 'CastError') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
-      } else {
-        res.status(ERR_DEFAULT).send({ message: 'Ошибка!' });
+        throw new BadRequest(err.message);
       }
-    });
+    })
+    .catch(next);
 };
 
-module.exports.updateUserAvatar = (req, res) => {
+module.exports.updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
-    .orFail(() => res.status(ERR_NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' }))
     .then((avatarData) => res.send({ data: avatarData }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Ошибка валидации' });
-      } else if (err.name === 'CastError') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
-      } else {
-        res.status(ERR_DEFAULT).send({ message: 'Ошибка!' });
+        throw new BadRequest(err.message);
       }
-    });
+    })
+    .catch(next);
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -94,13 +83,15 @@ module.exports.login = (req, res) => {
       })
         .send({ message: 'Авторизация прошла успешно!' });
     })
-    .catch(() => {
-      res.status(ERR_AUTH).send({ message: 'Ошибка авторизации' });
-    });
+    .catch(next);
 };
 
-module.exports.getCurrentUser = (req, res) => {
+module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
+    .orFail()
+    .catch(() => {
+      throw new NotFound('Пользователь с таким id не найден');
+    })
     .then((currentUser) => res.send({ currentUser }))
-    .catch((err) => res.send(err));
+    .catch(next);
 };

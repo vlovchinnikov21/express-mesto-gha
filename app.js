@@ -7,7 +7,7 @@ const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 const { auth } = require('./middlewars/auth');
 const { login, createUser } = require('./controllers/users');
-const { ERR_NOT_FOUND } = require('./error-codes/errors');
+const NotFound = require('./error-codes/NotFound');
 const { userValidation, loginValidation } = require('./middlewars/validation');
 
 const { PORT = 3000 } = process.env;
@@ -24,12 +24,25 @@ app.post('/signup', userValidation, createUser);
 
 app.use('/', auth, userRouter);
 app.use('/', auth, cardRouter);
-app.use('*', (req, res) => {
-  res.status(ERR_NOT_FOUND).send({ message: 'Данный ресурс не найден' });
+app.use('*', () => {
+  throw new NotFound('Запрашиваемый ресурс не найден');
 });
+
+mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.use(errors());
 
-mongoose.connect('mongodb://localhost:27017/mestodb');
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
+
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
+  next();
+});
 
 app.listen(PORT);
