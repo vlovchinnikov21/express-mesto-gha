@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const { isEmail } = require('validator');
-const urlRegExp = require('../middlewars/validation');
+const { urlRegExp } = require('../middlewars/validation');
+const AuthError = require('../error-codes/AuthError');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -41,20 +42,21 @@ const userSchema = new mongoose.Schema({
   },
 }, { versionKey: false });
 
-userSchema.statics.findUserByCredentials = (email, password) => this.findOne({ email }).select('+password')
-  .then((user) => {
-    if (!user) {
-      return Promise.reject(new Error('Неправильные почта или пароль'));
-    }
-
-    return bcrypt.compare(password, user.password)
-      .then((matched) => {
-        if (!matched) {
-          return Promise.reject(new Error('Неправильные почта или пароль'));
-        }
-
-        return user;
-      });
-  });
+// eslint-disable-next-line func-names
+userSchema.statics.findUserByCredentials = function (email, password) {
+  return this.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        throw new AuthError('Неверные данные!');
+      }
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            throw new AuthError('Неверные данные!');
+          }
+          return user;
+        });
+    });
+};
 
 module.exports = mongoose.model('user', userSchema);

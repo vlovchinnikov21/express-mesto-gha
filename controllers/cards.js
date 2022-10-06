@@ -1,7 +1,7 @@
 const Card = require('../models/card');
-const BadRequest = require('../error-codes/BadRequest');
-const NotFound = require('../error-codes/NotFound');
-const Forbidden = require('../error-codes/Forbidden');
+const BadRequestError = require('../error-codes/BadRequestError');
+const NotFoundError = require('../error-codes/NotFoundError');
+const ForbiddenError = require('../error-codes/ForbiddenError');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -17,7 +17,7 @@ module.exports.createCard = (req, res, next) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequest(err.message);
+        throw new BadRequestError(err.message);
       }
     })
     .catch(next);
@@ -26,14 +26,14 @@ module.exports.createCard = (req, res, next) => {
 module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params._id)
     .orFail(() => {
-      throw new NotFound('Карточка с такий id не найдена');
+      throw new NotFoundError('Карточка с такий id не найдена');
     })
     .then((card) => {
       if (card.owner.toString() === req.user._id) {
         Card.findByIdAndRemove(req.params._id)
           .then((cards) => res.send(cards));
       } else {
-        throw new Forbidden('Не хватает прав!');
+        throw new ForbiddenError('Не хватает прав!');
       }
     })
     .catch(next);
@@ -46,7 +46,7 @@ module.exports.likeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => {
-      throw new NotFound('Карточка с такий id не найдена');
+      throw new NotFoundError('Карточка с такий id не найдена');
     })
     .then((likes) => res.send({ data: likes }))
     .catch(next);
@@ -59,7 +59,7 @@ module.exports.dislikeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => {
-      throw new NotFound('Карточка с такий id не найдена');
+      throw new NotFoundError('Карточка с такий id не найдена');
     })
     .then((likes) => res.send({ data: likes }))
     .catch(next);

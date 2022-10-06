@@ -5,9 +5,9 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
-const { auth } = require('./middlewars/auth');
 const { login, createUser } = require('./controllers/users');
-const NotFound = require('./error-codes/NotFound');
+const { auth } = require('./middlewars/auth');
+const NotFoundError = require('./error-codes/NotFoundError');
 const { userValidation, loginValidation } = require('./middlewars/validation');
 
 const { PORT = 3000 } = process.env;
@@ -25,7 +25,7 @@ app.post('/signup', userValidation, createUser);
 app.use('/', auth, userRouter);
 app.use('/', auth, cardRouter);
 app.use('*', () => {
-  throw new NotFound('Запрашиваемый ресурс не найден');
+  throw new NotFoundError('Запрашиваемый ресурс не найден');
 });
 
 mongoose.connect('mongodb://localhost:27017/mestodb');

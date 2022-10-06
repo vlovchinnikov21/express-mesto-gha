@@ -1,9 +1,9 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const BadRequest = require('../error-codes/BadRequest');
-const NotFound = require('../error-codes/NotFound');
-const Conflict = require('../error-codes/Conflict');
+const BadRequestError = require('../error-codes/BadRequestError');
+const NotFoundError = require('../error-codes/NotFoundError');
+const ConflictError = require('../error-codes/ConflictError');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -15,7 +15,7 @@ module.exports.getUsersById = (req, res, next) => {
   User.findById(req.params._id)
     .then((user) => {
       if (!user) {
-        throw new NotFound('Пользователь с таким id не найден');
+        throw new NotFoundError('Пользователь с таким id не найден');
       }
       res.send({ data: user });
     })
@@ -34,7 +34,7 @@ module.exports.createUser = (req, res, next) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'MongoError' && err.code === 11000) {
-        throw new Conflict('Пользователь с таким email уже существует');
+        throw new ConflictError('Пользователь с таким email уже существует');
       }
     })
     .catch(next);
@@ -47,7 +47,7 @@ module.exports.updateUserProfile = (req, res, next) => {
     .then((userData) => res.send({ data: userData }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequest(err.message);
+        throw new BadRequestError(err.message);
       }
     })
     .catch(next);
@@ -60,7 +60,7 @@ module.exports.updateUserAvatar = (req, res, next) => {
     .then((avatarData) => res.send({ data: avatarData }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequest(err.message);
+        throw new BadRequestError(err.message);
       }
     })
     .catch(next);
@@ -90,7 +90,7 @@ module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .orFail()
     .catch(() => {
-      throw new NotFound('Пользователь с таким id не найден');
+      throw new NotFoundError('Пользователь с таким id не найден');
     })
     .then((currentUser) => res.send({ currentUser }))
     .catch(next);
