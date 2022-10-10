@@ -32,13 +32,11 @@ module.exports.createUser = (req, res, next) => {
       name, about, avatar, email, password: hash,
     }))
     .then((user) => res.send({
-      data: {
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-        email: user.email,
-        password: user.password,
-      },
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      email: user.email,
+      password: user.password,
     }))
     .catch((err) => {
       if (err.code === 11000) {
@@ -100,6 +98,6 @@ module.exports.getCurrentUser = (req, res, next) => {
     .catch(() => {
       throw new NotFoundError('Пользователь с таким id не найден');
     })
-    .then((currentUser) => res.send({ currentUser }))
+    .then((currentUser) => res.send(currentUser))
     .catch(next);
 };
