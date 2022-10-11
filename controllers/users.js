@@ -19,7 +19,13 @@ module.exports.getUsersById = (req, res, next) => {
       }
       res.send({ data: user });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError(err.message));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.createUser = (req, res, next) => {
@@ -39,10 +45,11 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.code === 11000) {
-        throw new ConflictError('Пользователь с таким email уже существует');
+        next(new ConflictError('Пользователь с таким email уже существует'));
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
+    });
 };
 
 module.exports.updateUserProfile = (req, res, next) => {
@@ -52,10 +59,11 @@ module.exports.updateUserProfile = (req, res, next) => {
     .then((userData) => res.send({ data: userData }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequestError(err.message);
+        next(new BadRequestError(err.message));
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
+    });
 };
 
 module.exports.updateUserAvatar = (req, res, next) => {
@@ -65,10 +73,11 @@ module.exports.updateUserAvatar = (req, res, next) => {
     .then((avatarData) => res.send({ data: avatarData }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequestError(err.message);
+        next(new BadRequestError(err.message));
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
+    });
 };
 
 module.exports.login = (req, res, next) => {
@@ -93,8 +102,7 @@ module.exports.login = (req, res, next) => {
 
 module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
-    .orFail()
-    .catch(() => {
+    .orFail(() => {
       throw new NotFoundError('Пользователь с таким id не найден');
     })
     .then((currentUser) => res.send(currentUser))

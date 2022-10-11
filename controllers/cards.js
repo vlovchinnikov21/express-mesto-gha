@@ -17,10 +17,11 @@ module.exports.createCard = (req, res, next) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequestError(err.message);
+        next(new BadRequestError(err.message));
+      } else {
+        next(err);
       }
-    })
-    .catch(next);
+    });
 };
 
 module.exports.deleteCard = (req, res, next) => {
@@ -31,12 +32,19 @@ module.exports.deleteCard = (req, res, next) => {
     .then((card) => {
       if (card.owner.toString() === req.user._id) {
         Card.findByIdAndRemove(req.params._id)
-          .then((cards) => res.send(cards));
+          .then((cards) => res.send(cards))
+          .catch(next);
       } else {
         throw new ForbiddenError('Не хватает прав!');
       }
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError(err.message));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.likeCard = (req, res, next) => {
@@ -49,7 +57,13 @@ module.exports.likeCard = (req, res, next) => {
       throw new NotFoundError('Карточка с такий id не найдена');
     })
     .then((likes) => res.send({ data: likes }))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError(err.message));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.dislikeCard = (req, res, next) => {
@@ -62,5 +76,11 @@ module.exports.dislikeCard = (req, res, next) => {
       throw new NotFoundError('Карточка с такий id не найдена');
     })
     .then((likes) => res.send({ data: likes }))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError(err.message));
+      } else {
+        next(err);
+      }
+    });
 };
