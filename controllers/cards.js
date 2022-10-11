@@ -54,7 +54,7 @@ module.exports.likeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => {
-      throw new NotFoundError('Карточка с такий id не найдена');
+      throw new NotFoundError('Карточка с таким id не найдена');
     })
     .then((likes) => res.send({ data: likes }))
     .catch((err) => {
